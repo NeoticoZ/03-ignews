@@ -2,12 +2,14 @@ import { query as q } from 'faunadb'
 import { fauna } from '../../../services/fauna'
 import { stripe } from '../../../services/stripe'
 
+// Cria uma função assíncrona que recebe 2 parâmetros
 export async function saveSubscription(
   subscriptionId: string,
   customerId: string,
   createAction = false,
 ) {
 
+  // Busca o usuário no banco do FaunaDB com o ID {customerId}  
   const userRef = await fauna.query(
     q.Select(
       'ref',
@@ -20,8 +22,10 @@ export async function saveSubscription(
     )
   )
 
+  // Busca no Stripe a subscription que tiver o mesmo valor do {subscriptionId}
   const subscription = await stripe.subscriptions.retrieve(subscriptionId)
 
+  // Caso a ação anterior tenha sido executada com êxito, cria um objeto com os dados dele
   const subscriptionData = {
     id: subscription.id,
     userId: userRef,
@@ -29,6 +33,7 @@ export async function saveSubscription(
     price_id: subscription.items.data[0].price.id,
   }
 
+  // Salva ou atualiza os dados da subscription no FaunaDB
   if (createAction) {
     await fauna.query(
       q.Create(
